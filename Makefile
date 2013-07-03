@@ -13,10 +13,10 @@ datasource/skyteam.exe :
 	mkdir -p datasource
 	curl http://www.skyteamtimetable.com/SkyTeamTravelTimetable.exe > datasource/skyteam.exe
 
-skyteam_extract/innoextract-1.4 :
+skyteam_extract/innoextract-1.4/VERSION :
 	cd skyteam_extract ; tar -xf innoextract-1.4.tar.gz
 
-skyteam_extract/innoextract-1.4/build/innoextract : skyteam_extract/innoextract-1.4
+skyteam_extract/innoextract-1.4/build/innoextract : skyteam_extract/innoextract-1.4/VERSION
 	mkdir -p skyteam_extract/innoextract-1.4/build
 	cd skyteam_extract/innoextract-1.4/build ; cmake ../
 	cd skyteam_extract/innoextract-1.4/build ; make
@@ -25,9 +25,9 @@ datasource/skyteam/app/serverdll.dll : skyteam_extract/innoextract-1.4/build/inn
 	cd datasource/skyteam/ ; ../../skyteam_extract/innoextract-1.4/build/innoextract ../skyteam.exe
 	touch datasource/skyteam/app/serverdll.dll
 
-skyteam_extract/dbextract.exe : skyteam_extract/dbextract.cpp
-	cd skyteam_extract ; winegcc -m32 dbextract.cpp -o dbextract
+datasource/skyteam/app/Devices/12/display-csv : datasource/skyteam/app/serverdll.dll
+	cp skyteam_extract/display-csv datasource/skyteam/app/Devices/12/display-csv
 
-skyteam_extract/python_i386 :
-	cd skyteam_extract ; lipo -thin i386 -output python_i386 `which python2.7`
+skyteam_extract/dbextract.exe : skyteam_extract/dbextract.cpp skyteam_extract/cities.h
+	cd skyteam_extract ; winegcc -m32 dbextract.cpp -o dbextract
 

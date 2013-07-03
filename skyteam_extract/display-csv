@@ -1,0 +1,3 @@
+<g.loop=Routes>
+<g.var=Route.FlightNumbers.2>,<g.var=Route.ActualFrom>,<g.var=Route.ActualTo>,<g.var=Route.DepartureTime.4>,<g.var=Route.ArrivalTime.4><g.var=Route.DayIndicator>,<g.var=Route.Duration.2>,<g.var=Route.AircraftTypes>
+</g.loop>
