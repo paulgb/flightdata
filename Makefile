@@ -16,3 +16,12 @@ datasource/skyteam.exe :
 skyteam_extract/innoextract-1.4 :
 	cd skyteam_extract ; tar -xf innoextract-1.4.tar.gz
 
+skyteam_extract/innoextract-1.4/build/innoextract : skyteam_extract/innoextract-1.4
+	mkdir -p skyteam_extract/innoextract-1.4/build
+	cd skyteam_extract/innoextract-1.4/build ; cmake ../
+	cd skyteam_extract/innoextract-1.4/build ; make
+
+datasource/skyteam/app/serverdll.dll : skyteam_extract/innoextract-1.4/build/innoextract datasource/skyteam.exe
+	cd datasource/skyteam/ ; ../../skyteam_extract/innoextract-1.4/build/innoextract ../skyteam.exe
+	touch datasource/skyteam/app/serverdll.dll
+
