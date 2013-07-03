@@ -25,3 +25,6 @@ datasource/skyteam/app/serverdll.dll : skyteam_extract/innoextract-1.4/build/inn
 	cd datasource/skyteam/ ; ../../skyteam_extract/innoextract-1.4/build/innoextract ../skyteam.exe
 	touch datasource/skyteam/app/serverdll.dll
 
+skyteam_extract/dbextract.exe : skyteam_extract/dbextract.cpp
+	cd skyteam_extract ; winegcc -m32 dbextract.cpp -o dbextract
+
