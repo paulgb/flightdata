@@ -28,3 +28,6 @@ datasource/skyteam/app/serverdll.dll : skyteam_extract/innoextract-1.4/build/inn
 skyteam_extract/dbextract.exe : skyteam_extract/dbextract.cpp
 	cd skyteam_extract ; winegcc -m32 dbextract.cpp -o dbextract
 
+skyteam_extract/python_i386 :
+	cd skyteam_extract ; lipo -thin i386 -output python_i386 `which python2.7`
+
