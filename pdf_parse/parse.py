@@ -1,3 +1,4 @@
+#!/usr/bin/python
 
 from __future__ import print_function
 from collections import defaultdict
@@ -110,6 +111,10 @@ def process_flights(col):
             else:
                 assert False
         elif text.startswith('Operated By'):
+            pass
+        elif text.startswith('Schedules continue'):
+            pass
+        elif text.startswith('Consult your'):
             pass
         elif y <= 706:
             col = which_col(FLIGHT_COLS, x)
