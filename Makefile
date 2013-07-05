@@ -31,3 +31,6 @@ datasource/skyteam/app/Devices/12/display-csv : datasource/skyteam/app/serverdll
 skyteam_extract/dbextract.exe : skyteam_extract/dbextract.cpp skyteam_extract/cities.h
 	cd skyteam_extract ; winegcc -m32 dbextract.cpp -o dbextract
 
+datasource/oneworld.xml : datasource/oneworld.pdf
+	cd datasource ; pdftohtml -xml oneworld.pdf
+
