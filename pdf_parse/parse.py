@@ -104,12 +104,13 @@ def process_flights(col):
     for ((x, y), text) in col:
         #print(x, y, text)
         if y in [752, 739] and x < 2:
-            if text.startswith('TO'):
-                to_airport = airport_code(text)
-            elif text.startswith('FROM'):
-                from_airport = airport_code(text)
-            else:
-                assert False
+            try:
+                if text.startswith('TO'):
+                    to_airport = airport_code(text)
+                elif text.startswith('FROM'):
+                    from_airport = airport_code(text)
+            except AttributeError:
+                break
         elif text.startswith('Operated By'):
             pass
         elif text.startswith('Schedules continue'):
