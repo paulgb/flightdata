@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
 from collections import defaultdict
 import re
 
@@ -62,13 +61,19 @@ def which_col(col_splits, x):
     return i
 
 
-def column_split(elements, col_splits):
+def column_split(elements, col_splits, upper=None, lower=None):
     num_cols = len(col_splits)
     cols = list(list() for x in range(num_cols))
     for ((x, y), text) in elements:
+        if lower and y < lower:
+            continue
+        if upper and y > upper:
+            continue
         c = which_col(col_splits, x)
         col_left = (col_splits)[c]
         cols[c].append(((x - col_left, y), text))
+    for col in cols:
+        col.sort(key=lambda ((x, y), text): (-y, x))
     return cols
 
 
@@ -90,6 +95,7 @@ def read_pages(pdf_file, start_page=None, end_page=None):
             continue
         if end_page is not None and i > end_page:
             break
+        print i, '----------------------------'
         interpreter.process_page(page)
         layout = device.get_result()
         yield layout
@@ -102,7 +108,6 @@ def process_flights(col):
     flights = defaultdict(lambda: [''] * 7)
 
     for ((x, y), text) in col:
-        #print(x, y, text)
         if y in [752, 739] and x < 2:
             try:
                 if text.startswith('TO'):
@@ -111,6 +116,8 @@ def process_flights(col):
                     from_airport = airport_code(text)
             except AttributeError:
                 break
+        elif text.startswith('From-to'):
+            break # alignment is off; ignore this column and pick the data up elsewhere
         elif text.startswith('Operated By'):
             pass
         elif text.startswith('Schedules continue'):
@@ -128,12 +135,10 @@ def process_flights(col):
 def main():
     for page in read_pages('oneworld.pdf', 5):
         elements = iter_elements(page)
-        #for elem in elements:
-        #    print(elem)
         columns = column_split(elements, [35, 262])
         for col in columns:
             for flight in process_flights(col):
-                print(','.join(flight))
+                print ','.join(flight)
 
 if __name__ == '__main__':
     main()
