@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from collections import defaultdict
-import re
+from bisect import bisect
 
 from pdfminer.pdfparser import PDFParser, PDFDocument
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
@@ -9,12 +9,6 @@ from pdfminer.pdfdevice import PDFDevice
 from pdfminer.layout import LAParams, LTTextLineHorizontal, LTChar, LTAnon
 from pdfminer.converter import PDFPageAggregator
 
-def airport_code(st):
-    '''
-    >>> airport_code('FOO (BAR)')
-    'BAR'
-    '''
-    return re.search('\((.{3})\)', st).groups()[0]
 
 def split_text(text_line):
     segments = list()
@@ -32,17 +26,19 @@ def split_text(text_line):
             segment += char.get_text()
     return segments
 
-def iter_elements(layout):
+
+def text_elements(layout):
     if isinstance(layout, LTTextLineHorizontal):
         for i in split_text(layout):
             yield i
     else:
         try:
             for a in layout:
-                for x in iter_elements(a):
+                for x in text_elements(a):
                     yield x
         except TypeError:
             pass
+
 
 def which_col(col_splits, x):
     '''
@@ -50,25 +46,56 @@ def which_col(col_splits, x):
     0
     >>> which_col([0, 10], 11)
     1
+    >>> which_col([0, 10], 10)
+    1
     >>> which_col([0, 10, 20, 30], 25)
     2
+    >>> which_col([0, 10, 20, 30], 30)
+    3
     '''
-    col_splits = list(enumerate(col_splits))
-    while col_splits:
-        (i, c) = col_splits.pop(0)
-        if c > x:
-            return i - 1
-    return i
+    i = bisect(col_splits, x)
+    if i < 1:
+        #print x, col_splits
+        return None
+    return i - 1
 
 
-def column_split(elements, col_splits, upper=None, lower=None):
+def bbox(elements, left=None, right=None, top=None, bottom=None):
+    '''
+    Yield elements whose x, y origin falls within or on the edges of
+    a given bbox. Return elements with coordinates relative to the
+    bottom-left of the given bbox. All bounds of the bbox are optional.
+    
+    >>> from itertools import product
+    >>> a = product(product(range(10), range(10)), 'x')
+    >>> list(bbox(a, 2, 4, 7, 6)) # doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), 'x'),
+     ((0, 1), 'x'),
+     ((1, 0), 'x'),
+     ((1, 1), 'x'),
+     ((2, 0), 'x'),
+     ((2, 1), 'x')]
+    '''
+    for (x, y), text in elements:
+        if left is not None and x < left:
+            continue
+        if right is not None and x > right:
+            continue
+        if top is not None and y > top:
+            continue
+        if bottom is not None and y < bottom:
+            continue
+        if left is not None:
+            x -= left
+        if bottom is not None:
+            y -= bottom
+        yield ((x, y), text)
+
+
+def layout_columns(elements, col_splits):
     num_cols = len(col_splits)
     cols = list(list() for x in range(num_cols))
     for ((x, y), text) in elements:
-        if lower and y < lower:
-            continue
-        if upper and y > upper:
-            continue
         c = which_col(col_splits, x)
         col_left = (col_splits)[c]
         cols[c].append(((x - col_left, y), text))
@@ -76,6 +103,37 @@ def column_split(elements, col_splits, upper=None, lower=None):
         col.sort(key=lambda ((x, y), text): (-y, x))
     return cols
 
+
+def data_columns(elements, col_splits, error=0):
+    '''
+    >>> dat = data_columns([
+    ...     ((0, 10), 'Jim'),
+    ...     ((10, 10), 'Smith'),
+    ...     ((40, 10), 'Vancouver'),
+    ...     ((0, 20), 'Jane'),
+    ...     ((5, 20), 'H.'),
+    ...     ((10, 20), 'Scott'),
+    ...     ((40, 20), 'Ottawa')],
+    ...     (0, 10, 40))
+    >>> dat.next()
+    ['Jim', 'Smith', 'Vancouver']
+    >>> dat.next()
+    ['Jane H.', 'Scott', 'Ottawa']
+    '''
+    last_y = None
+    row = [''] * len(col_splits)
+    for (x, y), text in elements:
+        if last_y is not None:
+            if y < last_y - error:
+                yield row
+                row = [''] * len(col_splits)
+        last_y = y
+        if row[which_col(col_splits, x)]:
+            print x, text
+            row[which_col(col_splits, x)] += ' '
+        row[which_col(col_splits, x)] += text
+    yield row
+    
 
 def read_pages(pdf_file, start_page=None, end_page=None):
     fp = open(pdf_file, 'rb')
@@ -99,47 +157,4 @@ def read_pages(pdf_file, start_page=None, end_page=None):
         interpreter.process_page(page)
         layout = device.get_result()
         yield layout
-
-FLIGHT_COLS = [0, 22, 45, 78, 97, 126, 197]
-
-def process_flights(col):
-    from_airport = ''
-    to_airport = ''
-    flights = defaultdict(lambda: [''] * 7)
-
-    for ((x, y), text) in col:
-        if y in [752, 739] and x < 2:
-            try:
-                if text.startswith('TO'):
-                    to_airport = airport_code(text)
-                elif text.startswith('FROM'):
-                    from_airport = airport_code(text)
-            except AttributeError:
-                break
-        elif text.startswith('From-to'):
-            break # alignment is off; ignore this column and pick the data up elsewhere
-        elif text.startswith('Operated By'):
-            pass
-        elif text.startswith('Schedules continue'):
-            pass
-        elif text.startswith('Consult your'):
-            pass
-        elif y <= 706:
-            col = which_col(FLIGHT_COLS, x)
-            flights[y][col] += text
-
-    for flight in flights.values():
-        flight[2] = flight[2].replace(' ', '')
-        yield tuple([from_airport, to_airport] + flight)
-
-def main():
-    for page in read_pages('oneworld.pdf', 5):
-        elements = iter_elements(page)
-        columns = column_split(elements, [35, 262])
-        for col in columns:
-            for flight in process_flights(col):
-                print ','.join(flight)
-
-if __name__ == '__main__':
-    main()
 
