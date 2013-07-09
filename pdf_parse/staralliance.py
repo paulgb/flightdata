@@ -4,7 +4,7 @@ from airport import airport_code
 from codecs import open
 
 LAYOUT_COLS = [36, 174, 311, 449]
-FLIGHT_COLS = [0, 20, 44, 74, 89, 112]
+FLIGHT_COLS = [0, 20, 44, 74, 88, 112]
 START_PAGE = 4
 
 def main():
