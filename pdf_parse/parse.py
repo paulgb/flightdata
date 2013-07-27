@@ -9,6 +9,8 @@ from pdfminer.pdfdevice import PDFDevice
 from pdfminer.layout import LAParams, LTTextLineHorizontal, LTChar, LTAnon
 from pdfminer.converter import PDFPageAggregator
 
+from sys import stderr
+
 
 def split_text(text_line):
     segments = list()
@@ -97,8 +99,11 @@ def layout_columns(elements, col_splits):
     cols = list(list() for x in range(num_cols))
     for ((x, y), text) in elements:
         c = which_col(col_splits, x)
-        col_left = (col_splits)[c]
-        cols[c].append(((x - col_left, y), text))
+        if c is None:
+            print >> stderr, x, text
+        else:
+            col_left = (col_splits)[c]
+            cols[c].append(((x - col_left, y), text))
     for col in cols:
         col.sort(key=lambda ((x, y), text): (-y, x))
     return cols
@@ -128,9 +133,12 @@ def data_columns(elements, col_splits, error=0):
                 yield row
                 row = [''] * len(col_splits)
         last_y = y
-        if row[which_col(col_splits, x)]:
-            print x, text
-            row[which_col(col_splits, x)] += ' '
+        c = which_col(col_splits, x)
+        if c is None:
+            print >> stderr, x, text
+        if row[c]:
+            #print x, text
+            row[c] += ' '
         row[which_col(col_splits, x)] += text
     yield row
     
@@ -153,7 +161,7 @@ def read_pages(pdf_file, start_page=None, end_page=None):
             continue
         if end_page is not None and i > end_page:
             break
-        print i, '----------------------------'
+        #print i, '----------------------------'
         interpreter.process_page(page)
         layout = device.get_result()
         yield layout

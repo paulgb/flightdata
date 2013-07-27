@@ -1,5 +1,9 @@
 
+# Data Acquisition
+
 datasource : datasource/oneworld.pdf datasource/staralliance.pdf datasource/skyteam.exe
+
+# Fetch Data for each alliance over HTTP
 
 datasource/oneworld.pdf :
 	mkdir -p datasource
@@ -12,6 +16,11 @@ datasource/staralliance.pdf :
 datasource/skyteam.exe :
 	mkdir -p datasource
 	curl http://www.skyteamtimetable.com/SkyTeamTravelTimetable.exe > datasource/skyteam.exe
+
+# Skyteam Data Extraction
+# Skyteam's pipeline is the most complicated: their timetable is available only
+# as a Windows executable with a proprietary data format. See README.md for details on
+# the data extraction process.
 
 skyteam_extract/innoextract-1.4/VERSION :
 	cd skyteam_extract ; tar -xf innoextract-1.4.tar.gz
@@ -30,7 +39,4 @@ datasource/skyteam/app/Devices/12/display-csv : datasource/skyteam/app/serverdll
 
 skyteam_extract/dbextract.exe : skyteam_extract/dbextract.cpp skyteam_extract/cities.h
 	cd skyteam_extract ; winegcc -m32 dbextract.cpp -o dbextract
-
-datasource/oneworld.xml : datasource/oneworld.pdf
-	cd datasource ; pdftohtml -xml oneworld.pdf
 
