@@ -136,6 +136,7 @@ def data_columns(elements, col_splits, error=0):
         c = which_col(col_splits, x)
         if c is None:
             print >> stderr, x, text
+            continue
         if row[c]:
             #print x, text
             row[c] += ' '

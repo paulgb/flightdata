@@ -5,7 +5,7 @@ from codecs import open
 import re
 
 LAYOUT_COLS = [x - 13 for x in [36, 174, 311, 449]]
-FLIGHT_COLS = [x + 13 for x in [-1, 20, 44, 74, 88, 112]]
+FLIGHT_COLS = [x + 13 for x in [-2, 20, 44, 74, 88, 112]]
 START_PAGE = 4
 
 def main():
@@ -38,19 +38,19 @@ def main():
                 if match:
                     from_airport = match.groups()[0]
                     continue
-                match = re.match('Operated By (.+?)( For .+|;.+)?', all_text)
+                match = re.match('Operated By (.+?)( For .+|;.+)?$', all_text)
                 if match:
                     operated_by = match.groups()[0]
                     cnt = True
-                match = re.match('Above Eff. (\d+/\d+)(?: thru (\d+/\d+))?', all_text)
+                match = re.match('Above Eff. (\d+/\d+)(?: thru (\d+/\d+))?$', all_text)
                 if match:
                     effective_from, effective_to = match.groups()
                     cnt = True
-                match = re.match('Above Disc. (\d+/\d+)', all_text)
+                match = re.match('Above Disc. (\d+/\d+)$', all_text)
                 if match:
                     effective_to = match.groups()[0]
                     cnt = True
-                match = re.match('Above Ops (\d+/\d+) Only', all_text)
+                match = re.match('Above Ops (\d+/\d+) Only$', all_text)
                 if match:
                     effective_from = effective_to = match.groups()[0]
                     cnt = True
