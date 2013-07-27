@@ -8,7 +8,7 @@ FLIGHT_COLS = [0, 20, 44, 74, 88, 112]
 START_PAGE = 4
 
 def main():
-    csv_out = open('oneworld.csv', 'w', 'utf-8')
+    csv_out = open('staralliance.csv', 'w', 'utf-8')
 
     for page in read_pages('../datasource/staralliance.pdf', START_PAGE, START_PAGE):
         elements = text_elements(page)
