@@ -1,4 +1,6 @@
 
+all : extracted
+
 # Data Acquisition
 
 datasource : datasource/oneworld.pdf datasource/staralliance.pdf datasource/skyteam.exe
@@ -39,4 +41,17 @@ datasource/skyteam/app/Devices/12/display-csv : datasource/skyteam/app/serverdll
 
 skyteam_extract/dbextract.exe : skyteam_extract/dbextract.cpp skyteam_extract/cities.h
 	cd skyteam_extract ; winegcc -m32 dbextract.cpp -o dbextract
+
+# PDF Data Extraction
+
+extracted : extracted/staralliance.csv extracted/oneworld.csv
+
+extracted/staralliance.csv : datasource/staralliance.pdf pdf_parse/parse.py pdf_parse/staralliance.py
+	mkdir -p extracted
+	python pdf_parse/staralliance.py datasource/staralliance.pdf extracted/staralliance.csv
+
+extracted/oneworld.csv : datasource/oneworld.pdf pdf_parse/parse.py pdf_parse/oneworld.py
+	mkdir -p extracted
+	python pdf_parse/oneworld.py datasource/oneworld.pdf extracted/oneworld.csv
+
 

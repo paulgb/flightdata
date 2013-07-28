@@ -3,17 +3,18 @@ from parse import read_pages, layout_columns, data_columns, text_elements, bbox
 from airport import airport_code, AIRPORT_CODE_RE
 from codecs import open
 import re
+from sys import argv
 
 LAYOUT_COLS = [x - 13 for x in [36, 174, 311, 449]]
 FLIGHT_COLS = [x + 13 for x in [-2, 20, 44, 74, 88, 112]]
 START_PAGE = 4
 
 def main():
-    csv_out = open('staralliance.csv', 'w', 'utf-8')
+    csv_out = open(argv[2], 'w', 'utf-8')
 
     to_airport = None
     from_airport = None
-    for pg, page in enumerate(read_pages('../datasource/staralliance.pdf', START_PAGE)):
+    for pg, page in enumerate(read_pages(argv[1], START_PAGE)):
         elements = text_elements(page)
         elements = bbox(elements, top=735, bottom=31)
         columns = layout_columns(elements, LAYOUT_COLS) 
@@ -61,7 +62,7 @@ def main():
                 if this_flight:
                     if effective_to is None:
                         effective_to = ''
-                    print ','.join([
+                    print >> csv_out, ','.join([
                         #str(pg),
                         #str(i),
                         from_airport,

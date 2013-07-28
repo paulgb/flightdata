@@ -3,6 +3,8 @@ from parse import read_pages, layout_columns, data_columns, text_elements, bbox
 from airport import airport_code
 from codecs import open
 
+from sys import argv
+
 LAYOUT_COLS = [34, 261]
 FLIGHT_COLS = [0, 23, 45, 79, 98, 126, 162, 197]
 CSV_COLS = ('valid_from', 'valid_to', 'valid_weekdays',
@@ -11,9 +13,9 @@ CSV_COLS = ('valid_from', 'valid_to', 'valid_weekdays',
 START_PAGE = 5
 
 def main():
-    csv_out = open('oneworld.csv', 'w', 'utf-8')
+    csv_out = open(argv[2], 'w', 'utf-8')
 
-    for page in read_pages('../datasource/oneworld.pdf', START_PAGE):
+    for page in read_pages(argv[1], START_PAGE):
         elements = text_elements(page)
         elements = bbox(elements, top=752)
         columns = layout_columns(elements, LAYOUT_COLS) 
